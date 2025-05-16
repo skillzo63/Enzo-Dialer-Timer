@@ -1,16 +1,20 @@
 // ==UserScript==
 // @name         Enzo Dialer Timer
 // @namespace    http://tampermonkey.net/
-// @version      1.0
+// @version      1.1
 // @description  Work timer that auto-resets, is draggable, customizable, and saves formatted logs by date/month
 // @match        https://v05.enzodialer.com/*
 // @grant        none
+// @updateURL    https://skillzo63.github.io/Enzo-Dialer-Timer/enzo-timer.user.js
+// @downloadURL  https://skillzo63.github.io/Enzo-Dialer-Timer/enzo-timer.user.js
 // ==/UserScript==
 
 (function () {
   const TIME_KEY = 'customLiveTimer_seconds';
   const RESET_KEY = 'customLiveTimer_lastReset';
-  const LOGS_KEY = 'customLiveTimer_logs';
+  const LOGS_KEY = 'customLiveTimer_logsByMonth';
+  const WRAP_KEY = 'customLiveTimer_wrapSeconds';
+
 
   const now = new Date();
   const todayStr = now.getFullYear() + '-' +
@@ -19,15 +23,21 @@
   const monthKey = todayStr.slice(0, 7); // e.g. 2025-05
   const lastReset = localStorage.getItem(RESET_KEY);
   let seconds = parseInt(localStorage.getItem(TIME_KEY)) || 0;
+  let wrapSeconds = parseInt(localStorage.getItem(WRAP_KEY)) || 0;
+  let wrapInterval = null;
 
-    console.log(lastReset);
-    console.log(todayStr);
     function formatTime(secs) {
       const h = String(Math.floor(secs / 3600)).padStart(2, '0');
       const m = String(Math.floor((secs % 3600) / 60)).padStart(2, '0');
       const s = String(secs % 60).padStart(2, '0');
       return `${h}:${m}:${s}`;
     }
+    function formatMinutesSeconds(secs) {
+      const m = String(Math.floor(secs / 60)).padStart(2, '0');
+      const s = String(secs % 60).padStart(2, '0');
+      return `${m}:${s}`;
+    }
+
   // Save and reset timer if new day after 2AM (Maximum time for work)
   // If the last reset was today, do not save
   if (now.getHours() >= 2 && lastReset !== todayStr) {
@@ -57,6 +67,10 @@
     timerBox.style.borderRadius = '8px';
     timerBox.style.zIndex = '9999';
     timerBox.style.cursor = 'move';
+    timerBox.style.resize = 'both';
+    timerBox.style.overflow = 'auto';
+    timerBox.style.minWidth = '150px';
+    timerBox.style.minHeight = '60px';
 
     const bg = localStorage.getItem('timer_bg_color') || ('#f9f9f9');
     const fg = localStorage.getItem('timer_text_color') || ('#060');
@@ -67,8 +81,15 @@
 
     const timerText = document.createElement('div');
     timerText.id = 'customTimerText';
-    timerText.textContent = 'Timer: 00:00:00';
+    timerText.textContent = 'Ready: 00:00:00';
     timerBox.appendChild(timerText);
+
+     const wrapUpText = document.createElement('div');
+      wrapUpText.id = 'wrapUpTimerText';
+      wrapUpText.textContent = 'Wrap-up: 00:00:00';
+      wrapUpText.style.marginTop = '4px';
+      timerBox.appendChild(wrapUpText);
+
 
     const settingsBox = document.createElement('div');
     settingsBox.style.display = 'none';
@@ -144,7 +165,7 @@
 
 
     function updateDisplay() {
-      timerText.textContent = `Timer: ${formatTime(seconds)}`;
+      timerText.textContent = `Ready: ${formatTime(seconds)}`;
     }
 
     function startTimer() {
@@ -163,6 +184,35 @@
         window.timerInterval = null;
       }
     }
+    function updateWrapDisplay() {
+        wrapUpText.textContent = `Wrap-up: ${formatMinutesSeconds(wrapSeconds)}`;
+    }
+
+function checkWrapUpBoxVisibility() {
+  const dispoBox = document.getElementById('DispoSelectBox')
+  const hangUp = document.getElementsByName("livecall");
+  if (!dispoBox) return;
+
+  const style = window.getComputedStyle(dispoBox);
+  const isVisible = style.visibility !== 'hidden';
+  const currSrc = hangUp.valueOf('src')[0].currentSrc
+  const isDead = currSrc == 'https://v05.enzodialer.com/agent/img/agc_live_call_DEAD.png';
+    console.log(isDead);
+
+  if ((isVisible ||isDead) && !wrapInterval) {
+    wrapInterval = setInterval(() => {
+      wrapSeconds++;
+      localStorage.setItem(WRAP_KEY, wrapSeconds);
+      updateWrapDisplay();
+    }, 1000);
+  } else if (!(isVisible ||isDead) && wrapInterval) {
+    clearInterval(wrapInterval);
+    wrapInterval = null;
+  }
+}
+
+
+
 
     function checkButtonState() {
       const active = document.querySelector('button.btn-success[title="You are active"]');
@@ -173,7 +223,13 @@
     }
 
     updateDisplay();
-    setInterval(checkButtonState, 500);
+    updateWrapDisplay();
+    setInterval(() => {
+  checkButtonState();
+  checkWrapUpBoxVisibility();
+}, 500);
+
+
 
     // Drag handling
     let drag = false, offsetX = 0, offsetY = 0;
