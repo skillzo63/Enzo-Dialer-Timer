@@ -37,7 +37,7 @@ Use the **📁 Export Month** button to download your work logs for the current 
 - Timer progress is saved in `localStorage` under:
   - `customLiveTimer_seconds`
   - `customLiveTimer_lastReset`
-  - `customLiveTimer_logsByMonth`
+  - `customLiveTimer_logs`
 - Color settings are saved with:
   - `timer_bg_color`
   - `timer_text_color`
