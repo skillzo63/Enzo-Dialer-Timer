@@ -1,8 +1,7 @@
 
 # Enzo Dialer Timer
 
-What is point of programming if it's not making your life easier ? 
-Instead of using a stopwatch and keep on pausing it manually just use this script
+Why do things manually when you can automate them? This script replaces the hassle of using a stopwatch by seamlessly tracking your active time in Enzo Dialer — no more pausing, resuming, or forgetting to time yourself.
 
 ## ✨ Features
 
