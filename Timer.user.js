@@ -67,8 +67,6 @@
     timerBox.style.borderRadius = '8px';
     timerBox.style.zIndex = '9999';
     timerBox.style.cursor = 'move';
-    timerBox.style.resize = 'both';
-    timerBox.style.overflow = 'auto';
     timerBox.style.minWidth = '150px';
     timerBox.style.minHeight = '60px';
 
