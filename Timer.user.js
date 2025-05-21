@@ -50,7 +50,9 @@
     }
 
     seconds = 0;
+    wrapSeconds = 0;
     localStorage.setItem(TIME_KEY, 0);
+    localStorage.setItem(WRAP_KEY, 0);
     localStorage.setItem(RESET_KEY, todayStr);
   }
 
